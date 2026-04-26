@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BloodType {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+model User {
+  id                    String     @id @default(uuid())
+  fullName              String?
+  identificationNumber  String?
+  birthDate             DateTime?
+  phone                 String?
+  email                 String?
+  residenceCity         String?
+  eps                   String?
+  medicalInsurance      String?
+  bloodType             BloodType?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  isDeleted             Boolean    @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
