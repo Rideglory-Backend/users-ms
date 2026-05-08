@@ -1,35 +1,35 @@
-import { Controller } from '@nestjs/common';
+import { Controller, ParseUUIDPipe } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto, UpdateUserPayloadDto } from '@rideglory/contracts';
 
 @Controller()
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @MessagePattern('createUser')
   create(@Payload() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
-  @MessagePattern('findAllUsers')
-  findAll() {
-    return this.usersService.findAll();
-  }
-
   @MessagePattern('findOneUser')
-  findOne(@Payload() id: number) {
+  findOne(@Payload('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
   }
 
+  @MessagePattern('findUserByEmail')
+  findByEmail(@Payload('email') email: string) {
+    return this.usersService.findByEmail(email);
+  }
+
   @MessagePattern('updateUser')
-  update(@Payload() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(updateUserDto.id, updateUserDto);
+  update(@Payload() updateUserDto: UpdateUserPayloadDto) {
+    const { id, ...data } = updateUserDto;
+    return this.usersService.update(id, data);
   }
 
   @MessagePattern('removeUser')
-  remove(@Payload() id: number) {
+  remove(@Payload('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
   }
 }
