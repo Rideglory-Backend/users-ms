@@ -33,7 +33,7 @@ export class UsersService extends PrismaClient implements OnModuleInit {
   }
 
   async findOne(id: string) {
-    const user = await this.user.findUnique({
+    const user = await this.user.findFirst({
       where: { id, isDeleted: false },
     });
 
@@ -48,7 +48,7 @@ export class UsersService extends PrismaClient implements OnModuleInit {
   }
 
   async findByEmail(email: string) {
-    const user = await this.user.findUnique({
+    const user = await this.user.findFirst({
       where: { email, isDeleted: false },
     });
 
