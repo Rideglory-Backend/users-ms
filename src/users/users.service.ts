@@ -3,6 +3,7 @@ import { CreateUserDto, UpdateUserDto } from '@rideglory/contracts';
 import { Prisma, PrismaClient } from '../generated/prisma';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { RpcException } from '@nestjs/microservices';
+import { Pool } from 'pg';
 
 @Injectable()
 export class UsersService extends PrismaClient implements OnModuleInit {
@@ -13,8 +14,13 @@ export class UsersService extends PrismaClient implements OnModuleInit {
     if (!url) {
       throw new Error('DATABASE_URL is not set');
     }
+    const pool = new Pool({
+      connectionString: url,
+      idleTimeoutMillis: 60_000,
+      connectionTimeoutMillis: 5_000,
+    });
     super({
-      adapter: new PrismaPg({ connectionString: url }),
+      adapter: new PrismaPg(pool),
     });
 
     this.logger.log('Database connected');
@@ -76,6 +82,22 @@ export class UsersService extends PrismaClient implements OnModuleInit {
       where: { id },
       data: updateUserDto,
     });
+  }
+
+  async updateFcmToken(id: string, fcmToken: string) {
+    await this.findOne(id);
+    return this.user.update({
+      where: { id },
+      data: { fcmToken },
+    });
+  }
+
+  async getFcmTokenByEmail(email: string): Promise<string | null> {
+    const user = await this.user.findFirst({
+      where: { email, isDeleted: false },
+      select: { fcmToken: true },
+    });
+    return user?.fcmToken ?? null;
   }
 
   async remove(id: string) {

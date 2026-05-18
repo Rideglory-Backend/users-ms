@@ -28,6 +28,16 @@ export class UsersController {
     return this.usersService.update(id, data);
   }
 
+  @MessagePattern('updateFcmToken')
+  updateFcmToken(@Payload() payload: { id: string; fcmToken: string }) {
+    return this.usersService.updateFcmToken(payload.id, payload.fcmToken);
+  }
+
+  @MessagePattern('getFcmTokenByEmail')
+  getFcmTokenByEmail(@Payload('email') email: string) {
+    return this.usersService.getFcmTokenByEmail(email);
+  }
+
   @MessagePattern('removeUser')
   remove(@Payload('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
