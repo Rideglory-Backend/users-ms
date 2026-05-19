@@ -3,13 +3,15 @@ FROM node:22-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
-# Set up /build with shared libs alongside the service so file: deps resolve:
-#   /build/rideglory-common-lib/
-#   /build/rideglory-contracts/
-#   /build/users-ms/              ← WORKDIR
 WORKDIR /build
 COPY rideglory-common-lib ./rideglory-common-lib
 COPY rideglory-contracts ./rideglory-contracts
+
+WORKDIR /build/rideglory-common-lib
+RUN npm install --ignore-scripts && npm run build
+
+WORKDIR /build/rideglory-contracts
+RUN npm install --ignore-scripts && npm run build
 
 WORKDIR /build/users-ms
 COPY users-ms/package.json users-ms/pnpm-lock.yaml ./
@@ -27,6 +29,12 @@ RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /build
 COPY rideglory-common-lib ./rideglory-common-lib
 COPY rideglory-contracts ./rideglory-contracts
+
+WORKDIR /build/rideglory-common-lib
+RUN npm install --ignore-scripts && npm run build
+
+WORKDIR /build/rideglory-contracts
+RUN npm install --ignore-scripts && npm run build
 
 WORKDIR /build/users-ms
 COPY users-ms/package.json users-ms/pnpm-lock.yaml ./
