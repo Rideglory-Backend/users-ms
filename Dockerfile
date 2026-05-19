@@ -20,6 +20,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY users-ms/ .
 RUN DATABASE_URL=postgresql://x:x@localhost/x pnpm exec prisma generate
 RUN pnpm build
+RUN node_modules/.bin/tsc --skipLibCheck --module commonjs --esModuleInterop --moduleResolution node --outDir . prisma.config.ts
 
 # ── Stage 2: RUNTIME ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runtime
@@ -28,8 +29,8 @@ WORKDIR /build/users-ms
 
 COPY --from=builder /build/users-ms/node_modules ./node_modules
 COPY --from=builder /build/users-ms/dist ./dist
+COPY --from=builder /build/users-ms/prisma.config.js ./prisma.config.js
 COPY users-ms/prisma ./prisma
-COPY users-ms/prisma.config.ts ./prisma.config.ts
 COPY users-ms/healthcheck.js ./healthcheck.js
 
 USER node
