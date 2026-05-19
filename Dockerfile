@@ -24,22 +24,9 @@ RUN pnpm build
 # ── Stage 2: RUNTIME ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runtime
 
-RUN corepack enable && corepack prepare pnpm@9 --activate
-
-WORKDIR /build
-COPY rideglory-common-lib ./rideglory-common-lib
-COPY rideglory-contracts ./rideglory-contracts
-
-WORKDIR /build/rideglory-common-lib
-RUN npm install --ignore-scripts && npm run build
-
-WORKDIR /build/rideglory-contracts
-RUN npm install --ignore-scripts && npm run build
-
 WORKDIR /build/users-ms
-COPY users-ms/package.json users-ms/pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm store prune
 
+COPY --from=builder /build/users-ms/node_modules ./node_modules
 COPY --from=builder /build/users-ms/dist ./dist
 COPY users-ms/prisma ./prisma
 COPY users-ms/healthcheck.js ./healthcheck.js
