@@ -31,9 +31,27 @@ export class UsersService extends PrismaClient implements OnModuleInit {
   }
 
   async create(createUserDto: CreateUserDto) {
-    await this.ensureEmailIsAvailable(createUserDto.email);
+    const existingUser = await this.user.findUnique({
+      where: { email: createUserDto.email },
+    });
 
-    return await this.user.create({
+    // Idempotente y reconciliador: el alta se hace después de crear/validar el
+    // usuario en Firebase, así que aquí nunca se rechaza por "email en uso".
+    // - Si ya existe activo -> se devuelve tal cual (reintento o usuario que
+    //   existía en Firebase pero no aquí).
+    // - Si existía borrado lógicamente -> se reactiva con los datos nuevos.
+    // - Si no existe -> se crea.
+    if (existingUser) {
+      if (existingUser.isDeleted) {
+        return this.user.update({
+          where: { id: existingUser.id },
+          data: { ...createUserDto, isDeleted: false },
+        });
+      }
+      return existingUser;
+    }
+
+    return this.user.create({
       data: createUserDto,
     });
   }
@@ -107,18 +125,5 @@ export class UsersService extends PrismaClient implements OnModuleInit {
       where: { id },
       data: { isDeleted: true },
     });
-  }
-
-  private async ensureEmailIsAvailable(email: string) {
-    const existingUser = await this.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      throw new RpcException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        message: 'User could not be created',
-      });
-    }
   }
 }
