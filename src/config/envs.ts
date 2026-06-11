@@ -3,11 +3,17 @@ import * as joi from 'joi'
 interface EnvVars {
     PORT: number;
     DATABASE_URL: string;
+    SENTRY_DSN?: string;
+    SENTRY_TRACES_SAMPLE_RATE?: number;
+    SENTRY_DEV_VERIFY?: string;
 }
 
 const envSchema = joi.object({
     PORT: joi.number().required(),
-    DATABASE_URL: joi.string().required()
+    DATABASE_URL: joi.string().required(),
+    SENTRY_DSN: joi.string().uri().optional(),
+    SENTRY_TRACES_SAMPLE_RATE: joi.number().min(0).max(1).optional(),
+    SENTRY_DEV_VERIFY: joi.string().optional(),
 }).unknown(true)
 
 const { error, value } = envSchema.validate(process.env);
@@ -20,6 +26,9 @@ const envVars: EnvVars = value;
 
 export const envs = {
     port: envVars.PORT,
-    databaseUrl: envVars.DATABASE_URL
+    databaseUrl: envVars.DATABASE_URL,
+    sentryDsn: envVars.SENTRY_DSN,
+    sentryTracesSampleRate: envVars.SENTRY_TRACES_SAMPLE_RATE,
+    sentryDevVerify: envVars.SENTRY_DEV_VERIFY,
 }
 

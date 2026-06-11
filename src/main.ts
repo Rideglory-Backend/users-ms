@@ -1,3 +1,4 @@
+import './instrument';
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -26,7 +27,7 @@ async function bootstrap() {
     transform: true,
   }));
 
-  app.useGlobalFilters(new RpcAllExceptionsFilter());
+  app.useGlobalFilters(new RpcAllExceptionsFilter('users-ms'));
 
   app.get(Logger).log('Users MS is running on port ' + envs.port);
 
