@@ -42,4 +42,14 @@ export class UsersController {
   remove(@Payload('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
   }
+
+  @MessagePattern('acceptMedicalConsent')
+  acceptMedicalConsent(
+    @Payload() payload: { email: string; consentVersion: string },
+  ) {
+    return this.usersService.acceptMedicalConsent(
+      payload.email,
+      payload.consentVersion,
+    );
+  }
 }

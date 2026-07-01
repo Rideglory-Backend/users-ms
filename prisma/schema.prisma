@@ -32,6 +32,7 @@ model User {
   emergencyContactName  String?
   emergencyContactPhone String?
   fcmToken              String?
+  medicalConsentAcceptedAt DateTime?
   isDeleted             Boolean    @default(false)
 
   createdAt DateTime @default(now())

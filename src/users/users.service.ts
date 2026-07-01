@@ -126,4 +126,19 @@ export class UsersService extends PrismaClient implements OnModuleInit {
       data: { isDeleted: true },
     });
   }
+
+  async acceptMedicalConsent(email: string, consentVersion: string) {
+    const user = await this.findByEmail(email);
+
+    this.logger.log(
+      `Medical consent accepted by user ${user.id} (version: ${consentVersion})`,
+    );
+
+    const updatedUser = await this.user.update({
+      where: { id: user.id },
+      data: { medicalConsentAcceptedAt: new Date() },
+    });
+
+    return { medicalConsentAcceptedAt: updatedUser.medicalConsentAcceptedAt };
+  }
 }
