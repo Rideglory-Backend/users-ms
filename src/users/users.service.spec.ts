@@ -68,3 +68,30 @@ describe('UsersService — acceptMedicalConsent()', () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 });
+
+// ----------------------------------------------------------------
+// findByEmail() — medicalConsentAcceptedAt passthrough (QA case 4.3)
+// ----------------------------------------------------------------
+
+describe('UsersService — findByEmail() medicalConsentAcceptedAt passthrough', () => {
+  let service: UsersService;
+
+  beforeEach(() => {
+    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5433/test';
+    mockFindFirst.mockReset();
+    service = new UsersService();
+  });
+
+  it('CASE 4.3 — returns medicalConsentAcceptedAt: null without error for a user that never accepted consent', async () => {
+    mockFindFirst.mockResolvedValue({
+      id: 'user-1',
+      email: 'jane@example.com',
+      isDeleted: false,
+      medicalConsentAcceptedAt: null,
+    });
+
+    const result = await service.findByEmail('jane@example.com');
+
+    expect(result).toHaveProperty('medicalConsentAcceptedAt', null);
+  });
+});
