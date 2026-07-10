@@ -126,4 +126,12 @@ export class UsersService extends PrismaClient implements OnModuleInit {
       data: { isDeleted: true },
     });
   }
+
+  async hardDelete(id: string) {
+    await this.findOne(id);
+
+    return this.user.delete({
+      where: { id },
+    });
+  }
 }

@@ -42,4 +42,9 @@ export class UsersController {
   remove(@Payload('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
   }
+
+  @MessagePattern('hardDeleteUser')
+  hardDelete(@Payload('id', ParseUUIDPipe) id: string) {
+    return this.usersService.hardDelete(id);
+  }
 }
