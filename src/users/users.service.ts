@@ -128,10 +128,19 @@ export class UsersService extends PrismaClient implements OnModuleInit {
   }
 
   async hardDelete(id: string) {
-    await this.findOne(id);
-
-    return this.user.delete({
-      where: { id },
-    });
+    try {
+      return await this.user.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        // "Record to delete does not exist" — el usuario ya fue borrado en
+        // una corrida previa (reintento tras éxito total, o carrera con otra
+        // petición en vuelo). No-op idempotente: no relanzar.
+        this.logger.log(`hardDelete: user ${id} already deleted, treating as idempotent no-op`);
+        return null;
+      }
+      throw error;
+    }
   }
 }

@@ -16,6 +16,14 @@ const mockUpdate = jest.fn();
 const mockDelete = jest.fn();
 const mockConnect = jest.fn().mockResolvedValue(undefined);
 
+class MockPrismaClientKnownRequestError extends Error {
+  code: string;
+  constructor(message: string, code: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 jest.mock('../generated/prisma', () => ({
   PrismaClient: class {
     user = {
@@ -24,6 +32,9 @@ jest.mock('../generated/prisma', () => ({
       delete: mockDelete,
     };
     $connect = mockConnect;
+  },
+  Prisma: {
+    PrismaClientKnownRequestError: MockPrismaClientKnownRequestError,
   },
 }));
 
@@ -58,11 +69,23 @@ describe('UsersService', () => {
       expect(result).toEqual({ id: 'user-1' });
     });
 
-    it('throws RpcException 404 when the user does not exist, without calling delete', async () => {
-      mockFindFirst.mockResolvedValue(null);
+    it('is an idempotent no-op when prisma.user.delete throws P2025 (record already deleted), without calling findFirst', async () => {
+      mockDelete.mockRejectedValue(
+        new MockPrismaClientKnownRequestError('An operation failed because it depends on one or more records that were required but not found.', 'P2025'),
+      );
 
-      await expect(service.hardDelete('missing-id')).rejects.toThrow(RpcException);
-      expect(mockDelete).not.toHaveBeenCalled();
+      const result = await service.hardDelete('missing-id');
+
+      expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'missing-id' } });
+      expect(mockFindFirst).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it('rethrows non-P2025 errors from prisma.user.delete', async () => {
+      const dbDown = new Error('connection refused');
+      mockDelete.mockRejectedValue(dbDown);
+
+      await expect(service.hardDelete('user-1')).rejects.toThrow(dbDown);
     });
   });
 
